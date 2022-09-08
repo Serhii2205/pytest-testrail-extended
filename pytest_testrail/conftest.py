@@ -119,7 +119,7 @@ def pytest_addoption(parser):
         default=None,
         required=False,
         help='Custom comment, to be appended to default comment for test case \
-              (config file: custom_comment in TESTCASE section)'
+              (config file: config file: suite_id in TESTRUN section TESTRUN section)'
     )
     group.addoption(
         '--tr-testrun-custom-git-tag',
@@ -127,7 +127,7 @@ def pytest_addoption(parser):
         default=None,
         required=False,
         help='Custom git tag, to be added to test case \
-              (config file: custom_git_tag in TESTCASE section)'
+              (config file: custom_git_tag in TESTRUN section)'
     )
 
 
@@ -160,7 +160,7 @@ def pytest_configure(config):
                 skip_missing=config.getoption('--tr-skip-missing'),
                 milestone_id=config_manager.getoption('tr-milestone-id', 'milestone_id', 'TESTRUN'),
                 custom_comment=config_manager.getoption('tc-custom-comment', 'custom_comment', 'TESTCASE'),
-                custom_git_tag=config_manager.getoption('tr-testrun-custom-git-tag', 'custom-git-tag', 'TESTRUN')
+                custom_git_tag=config_manager.getoption('tr-testrun-custom-git-tag', 'custom_git_tag', 'TESTRUN')
             ),
             # Name of plugin instance (allow to be used by other plugins)
             name="pytest-testrail-instance"
