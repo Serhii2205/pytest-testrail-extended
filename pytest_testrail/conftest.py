@@ -121,6 +121,14 @@ def pytest_addoption(parser):
         help='Custom comment, to be appended to default comment for test case \
               (config file: custom_comment in TESTCASE section)'
     )
+    group.addoption(
+        '--tc-custom-git-tag',
+        action='store',
+        default=None,
+        required=False,
+        help='Custom git tag, to be added to test case \
+              (config file: custom_git_tag in TESTCASE section)'
+    )
 
 
 def pytest_configure(config):
