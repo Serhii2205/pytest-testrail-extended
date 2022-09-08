@@ -67,9 +67,9 @@ def pytest_addoption(parser):
         default=None,
         help='Description given to testrun, that appears in TestRail (config file: description in TESTRUN section)')
     group.addoption(
-        '--tr-run-id',
+        '--tr-testrun-run-id',
         action='store',
-        default=0,
+        default=None,
         required=False,
         help='Identifier of testrun, that appears in TestRail. If provided, \
               option "--tr-testrun-name" will be ignored')
@@ -152,7 +152,7 @@ def pytest_configure(config):
                                                     default=True),
                 tr_name=config_manager.getoption('tr-testrun-name', 'name', 'TESTRUN'),
                 tr_description=config_manager.getoption('tr-testrun-description', 'description', 'TESTRUN'),
-                run_id=config.getoption('tr-run-id', 'run_id', 'TESTRUN'),
+                run_id=config_manager.getoption('tr-testrun-run-id', 'run_id', 'TESTRUN'),
                 plan_id=config_manager.getoption('tr-plan-id', 'plan_id', 'TESTRUN'),
                 version=config.getoption('--tr-version'),
                 close_on_complete=config.getoption('--tr-close-on-complete'),
