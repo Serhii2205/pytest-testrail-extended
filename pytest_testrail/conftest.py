@@ -152,7 +152,7 @@ def pytest_configure(config):
                                                     default=True),
                 tr_name=config_manager.getoption('tr-testrun-name', 'name', 'TESTRUN'),
                 tr_description=config_manager.getoption('tr-testrun-description', 'description', 'TESTRUN'),
-                run_id=config.getoption('tr-run-id', 'run-id', 'TESTRUN'),
+                run_id=config.getoption('tr-run-id', 'run_id', 'TESTRUN'),
                 plan_id=config_manager.getoption('tr-plan-id', 'plan_id', 'TESTRUN'),
                 version=config.getoption('--tr-version'),
                 close_on_complete=config.getoption('--tr-close-on-complete'),
