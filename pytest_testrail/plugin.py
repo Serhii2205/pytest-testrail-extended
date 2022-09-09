@@ -125,17 +125,27 @@ def clean_test_defects(defect_ids):
 def get_testrail_keys(items):
     """Return Tuple of Pytest nodes and TestRail ids from pytests markers"""
     testcaseids = []
+    # here we store original names of tests,
+    # for distribute testrail case_id for original tests according to PyTest parametrization
+    original_names = []
     for item in items:
         if item.get_closest_marker(TESTRAIL_PREFIX):
+            index = original_names.count(item.originalname)
+            original_names.append(item.originalname)
+            case_id = item.get_closest_marker(TESTRAIL_PREFIX).kwargs.get('ids')
+
             testcaseids.append(
-                (
-                    item,
-                    clean_test_ids(
-                        item.get_closest_marker(TESTRAIL_PREFIX).kwargs.get('ids')
-                    )
-                )
+                (item, [clean_test_ids(case_id)[index]], (case_id[index],))
             )
+
     return testcaseids
+
+
+def get_testrail_case_id(test_func, items_with_tr_keys):
+    """original case name has index = 2 in items_with_tr_keys"""
+    for elem in items_with_tr_keys:
+        if test_func is elem[0]:
+            return elem[2]
 
 
 class PyTestRailPlugin(object):
@@ -161,6 +171,7 @@ class PyTestRailPlugin(object):
         self.milestone_id = milestone_id
         self.custom_comment = custom_comment
         self.custom_git_tag = custom_git_tag
+        self.items_with_tr_keys = None
 
     # pytest hooks
 
@@ -177,8 +188,8 @@ class PyTestRailPlugin(object):
 
     @pytest.hookimpl(trylast=True)
     def pytest_collection_modifyitems(self, session, config, items):
-        items_with_tr_keys = get_testrail_keys(items)
-        tr_keys = [case_id for item in items_with_tr_keys for case_id in item[1]]
+        self.items_with_tr_keys = get_testrail_keys(items)
+        tr_keys = [case_id for item in self.items_with_tr_keys for case_id in item[1]]
 
         if self.testplan_id and self.is_testplan_available():
             self.testrun_id = 0
@@ -188,7 +199,7 @@ class PyTestRailPlugin(object):
                 tests_list = [
                     test.get('case_id') for test in self.get_tests(self.testrun_id)
                 ]
-                for item, case_id in items_with_tr_keys:
+                for item, case_id in self.items_with_tr_keys:
                     if not set(case_id).intersection(set(tests_list)):
                         mark = pytest.mark.skip('Test is not present in testrun.')
                         item.add_marker(mark)
@@ -221,7 +232,8 @@ class PyTestRailPlugin(object):
         if item.get_closest_marker(TESTRAIL_DEFECTS_PREFIX):
             defectids = item.get_closest_marker(TESTRAIL_DEFECTS_PREFIX).kwargs.get('defect_ids')
         if item.get_closest_marker(TESTRAIL_PREFIX):
-            testcaseids = item.get_closest_marker(TESTRAIL_PREFIX).kwargs.get('ids')
+            # testcaseids = item.get_closest_marker(TESTRAIL_PREFIX).kwargs.get('ids')
+            testcaseids = get_testrail_case_id(item, self.items_with_tr_keys)
             if rep.when == 'call' and testcaseids:
                 if defectids:
                     self.add_result(
