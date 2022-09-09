@@ -12,13 +12,14 @@ TESTRAIL_TEST_STATUS = {
     "blocked": 2,
     "untested": 3,
     "retest": 4,
-    "failed": 5
+    "failed": 5,
+    "skipped": 6
 }
 
 PYTEST_TO_TESTRAIL_STATUS = {
     "passed": TESTRAIL_TEST_STATUS["passed"],
     "failed": TESTRAIL_TEST_STATUS["failed"],
-    "skipped": TESTRAIL_TEST_STATUS["blocked"],
+    "skipped": TESTRAIL_TEST_STATUS["skipped"],
 }
 
 DT_FORMAT = '%d-%m-%Y %H:%M:%S'
@@ -128,15 +129,19 @@ def get_testrail_keys(items):
     # here we store original names of tests,
     # for distribute testrail case_id for original tests according to PyTest parametrization
     original_names = []
+
     for item in items:
         if item.get_closest_marker(TESTRAIL_PREFIX):
             index = original_names.count(item.originalname)
             original_names.append(item.originalname)
             case_id = item.get_closest_marker(TESTRAIL_PREFIX).kwargs.get('ids')
 
-            testcaseids.append(
-                (item, [clean_test_ids(case_id)[index]], (case_id[index],))
-            )
+            try:
+                testcaseids.append(
+                    (item, [clean_test_ids(case_id)[index]], (case_id[index],))
+                )
+            except IndexError as er:
+                print(f'{er}. \nIncorrect amount of case_ids for test: {item.originalname}')
 
     return testcaseids
 
@@ -234,7 +239,7 @@ class PyTestRailPlugin(object):
         if item.get_closest_marker(TESTRAIL_PREFIX):
             # testcaseids = item.get_closest_marker(TESTRAIL_PREFIX).kwargs.get('ids')
             testcaseids = get_testrail_case_id(item, self.items_with_tr_keys)
-            if rep.when == 'call' and testcaseids:
+            if rep.when == 'call' and testcaseids or rep.outcome == 'skipped':
                 if defectids:
                     self.add_result(
                         clean_test_ids(testcaseids),
