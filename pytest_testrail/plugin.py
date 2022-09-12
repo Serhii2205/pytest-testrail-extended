@@ -28,6 +28,7 @@ TESTRAIL_PREFIX = 'testrail'
 TESTRAIL_DEFECTS_PREFIX = 'testrail_defects'
 ADD_RESULTS_URL = 'add_results_for_cases/{}'
 ADD_TESTRUN_URL = 'add_run/{}'
+UPDATE_TEST_RUN = 'update_run/{}'
 CLOSE_TESTRUN_URL = 'close_run/{}'
 CLOSE_TESTPLAN_URL = 'close_plan/{}'
 GET_TESTRUN_URL = 'get_run/{}'
@@ -200,6 +201,9 @@ class PyTestRailPlugin(object):
             self.testrun_id = 0
         elif self.testrun_id and self.is_testrun_available():
             self.testplan_id = 0
+            # ToDo NEED TO ADD separate addoption parament like persist_run_name: bool
+            # as for now we always update test run name
+            self.update_testrun_name(run_id=self.testrun_id)
             if self.skip_missing:
                 tests_list = [
                     test.get('case_id') for test in self.get_tests(self.testrun_id)
@@ -511,5 +515,21 @@ class PyTestRailPlugin(object):
         error = self.client.get_error(response)
         if error:
             print('[{}] Failed to get tests: "{}"'.format(TESTRAIL_PREFIX, error))
+            return None
+        return response
+
+    def update_testrun_name(self, run_id, new_name=None):
+        if not new_name:
+            new_name = testrun_name()
+        response = self.client.send_post(
+            UPDATE_TEST_RUN.format(run_id),
+            data={'name': new_name},
+            cert_check=self.cert_check
+        )
+        error = self.client.get_error(response)
+        if error:
+            print('[{}] Failed to get update testrun name for tests run_id: "{}"'.format(
+                TESTRAIL_PREFIX, run_id)
+            )
             return None
         return response
